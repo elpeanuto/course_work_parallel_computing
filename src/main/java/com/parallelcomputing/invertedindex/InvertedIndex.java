@@ -4,15 +4,17 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 public class InvertedIndex {
 
     private static InvertedIndex instance;
     private final Map<String, Set<String>> index = new ConcurrentHashMap<>();
     private final List<Path> allFiles;
+    ResourceBundle bundle = ResourceBundle.getBundle("config");
 
-    private InvertedIndex(int numOfThreads) {
+    private InvertedIndex() {
         allFiles = getAllPaths();
-        distributeFilesToThreads(numOfThreads);
+        distributeFilesToThreads(Integer.parseInt(bundle.getString("numOfThreads")));
     }
 
     private void distributeFilesToThreads(int numOfThreads) {
@@ -47,14 +49,16 @@ public class InvertedIndex {
     }
 
     public List<Path> getAllPaths() {
+        String root = bundle.getString("root");
+
         List<Path> list = new ArrayList<>(Objects.requireNonNull(
-                FileUtil.readFilesInRange(Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/train/unsup"), 1500, 2500)));
+                FileUtil.readFilesInRange(Path.of(root + "/train/unsup"), 1500, 2500)));
 
         String[] directories = {
-                "C:/Users/elpea/OneDrive/Desktop/aclImdb/test/neg",
-                "C:/Users/elpea/OneDrive/Desktop/aclImdb/test/pos",
-                "C:/Users/elpea/OneDrive/Desktop/aclImdb/train/neg",
-                "C:/Users/elpea/OneDrive/Desktop/aclImdb/train/pos"
+                root + "/test/neg",
+                root + "/test/pos",
+                root + "/train/neg",
+                root + "/train/pos"
         };
 
         for (String directory : directories) {
@@ -64,9 +68,9 @@ public class InvertedIndex {
         return list;
     }
 
-    public static InvertedIndex getInstance(int numOfThreads) {
+    public static InvertedIndex getInstance() {
         if (instance == null) {
-            instance = new InvertedIndex(numOfThreads);
+            instance = new InvertedIndex();
         }
         return instance;
     }
@@ -100,7 +104,6 @@ public class InvertedIndex {
 
         return result;
     }
-
 
     private String[] parseTextToWords(String str) {
         String cleanedText = str.replaceAll("<[^>]*>", " ").trim();
