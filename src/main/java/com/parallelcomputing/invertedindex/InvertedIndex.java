@@ -9,16 +9,24 @@ public class InvertedIndex {
     private final Map<String, Set<String>> index = new HashMap<>();
 
     private InvertedIndex() {
-        Path dirPath = Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/test/neg");
-        int startIndex = 1500;
-        int endIndex = 1500;
+        List<Path> list = List.of(Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/test/neg"),
+                Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/test/pos"),
+                Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/train/neg"),
+                Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/train/pos"));
 
-        List<Path> pathList = FileUtil.readFilesInRange(dirPath, startIndex, endIndex);
+        builder(list, 1500, 1750);
+        builder(List.of(Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/train/unsup")), 1500, 2500);
+    }
 
-        if (pathList == null) throw new RuntimeException();
+    private void builder(List<Path> dirList, int startIndex, int endIndex) {
+        for (Path dir:dirList) {
+            List<Path> pathList = FileUtil.readFilesInRange(dir, startIndex, endIndex);
 
-        for (Path path : pathList) {
-            add(FileUtil.fileToSting(path), String.valueOf(path.getFileName()));
+            if (pathList == null) throw new RuntimeException();
+
+            for (Path path : pathList) {
+                add(FileUtil.fileToSting(path), String.valueOf(path.getFileName()));
+            }
         }
     }
 
@@ -47,7 +55,7 @@ public class InvertedIndex {
 
         return Arrays.stream(cleanedText
                         .replaceAll("[^A-Za-z0-9\\s']", " ")
-                        .replaceAll("'[^\\s]*", "")
+                        .replaceAll("'\\S*", "")
                         .toLowerCase(Locale.ROOT)
                         .split("\\s+"))
                 .distinct()
