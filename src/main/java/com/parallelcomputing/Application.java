@@ -7,6 +7,6 @@ public class Application {
     public static void main(String[] args) {
         InvertedIndex invertedIndex = InvertedIndex.getInstance();
 
-        System.out.println(invertedIndex.get("desperate"));
+        System.out.println(invertedIndex.get("gay"));
     }
 }

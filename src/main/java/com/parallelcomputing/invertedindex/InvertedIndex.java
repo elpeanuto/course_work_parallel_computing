@@ -46,9 +46,27 @@ public class InvertedIndex {
         }
     }
 
-    public Set<String> get(String word) {
-        return index.get(word.trim().toLowerCase(Locale.ROOT));
+    public Set<String> get(String inputWords) {
+        String[] words = parseTextToWords(inputWords);
+
+        Set<String> result = null;
+        for (String word : words) {
+            Set<String> currentSet = index.get(word);
+
+            if (currentSet == null) {
+                return null;
+            }
+
+            if (result == null) {
+                result = new HashSet<>(currentSet);
+            } else {
+                result.retainAll(currentSet);
+            }
+        }
+
+        return result;
     }
+
 
     private String[] parseTextToWords(String str) {
         String cleanedText = str.replaceAll("<[^>]*>", " ").trim();
