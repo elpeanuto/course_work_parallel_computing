@@ -2,37 +2,71 @@ package com.parallelcomputing.invertedindex;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class InvertedIndex {
 
     private static InvertedIndex instance;
-    private final Map<String, Set<String>> index = new HashMap<>();
+    private final Map<String, Set<String>> index = new ConcurrentHashMap<>();
+    private final List<Path> allFiles;
 
-    private InvertedIndex() {
-        List<Path> list = List.of(Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/test/neg"),
-                Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/test/pos"),
-                Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/train/neg"),
-                Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/train/pos"));
-
-        builder(list, 1500, 1750);
-        builder(List.of(Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/train/unsup")), 1500, 2500);
+    private InvertedIndex(int numOfThreads) {
+        allFiles = getAllPaths();
+        distributeFilesToThreads(numOfThreads);
     }
 
-    private void builder(List<Path> dirList, int startIndex, int endIndex) {
-        for (Path dir:dirList) {
-            List<Path> pathList = FileUtil.readFilesInRange(dir, startIndex, endIndex);
+    private void distributeFilesToThreads(int numOfThreads) {
+        int batchSize = allFiles.size() / numOfThreads;
+        int startIndex = 0;
+        List<Thread> threads = new ArrayList<>();
 
-            if (pathList == null) throw new RuntimeException();
+        for (int i = 0; i < numOfThreads; i++) {
+            int endIndex = Math.min(startIndex + batchSize, allFiles.size());
+            List<Path> filesForThread = allFiles.subList(startIndex, endIndex);
 
-            for (Path path : pathList) {
-                add(FileUtil.fileToSting(path), String.valueOf(path.getFileName()));
+            Thread thread = new Thread(() -> processFiles(filesForThread));
+            threads.add(thread);
+            thread.start();
+
+            startIndex = endIndex;
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    public static InvertedIndex getInstance() {
+    private void processFiles(List<Path> files) {
+        for (Path path : files) {
+            add(FileUtil.fileToSting(path), String.valueOf(path.getFileName()));
+        }
+    }
+
+    public List<Path> getAllPaths() {
+        List<Path> list = new ArrayList<>(Objects.requireNonNull(
+                FileUtil.readFilesInRange(Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/train/unsup"), 1500, 2500)));
+
+        String[] directories = {
+                "C:/Users/elpea/OneDrive/Desktop/aclImdb/test/neg",
+                "C:/Users/elpea/OneDrive/Desktop/aclImdb/test/pos",
+                "C:/Users/elpea/OneDrive/Desktop/aclImdb/train/neg",
+                "C:/Users/elpea/OneDrive/Desktop/aclImdb/train/pos"
+        };
+
+        for (String directory : directories) {
+            list.addAll(Objects.requireNonNull(FileUtil.readFilesInRange(Path.of(directory), 1500, 1750)));
+        }
+
+        return list;
+    }
+
+    public static InvertedIndex getInstance(int numOfThreads) {
         if (instance == null) {
-            instance = new InvertedIndex();
+            instance = new InvertedIndex(numOfThreads);
         }
         return instance;
     }

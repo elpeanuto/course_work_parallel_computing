@@ -8,7 +8,7 @@ import java.util.Set;
 public class Application {
 
     public static void main(String[] args) {
-        InvertedIndex invertedIndex = InvertedIndex.getInstance();
+        InvertedIndex invertedIndex = InvertedIndex.getInstance(4);
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
