@@ -9,8 +9,8 @@ import java.util.stream.Stream;
 
 public class FileUtil {
 
-    public static List<Path> readFilesInRange(String directoryPath, int startIndex, int endIndex) {
-        try (Stream<Path> pathStream = Files.list(Path.of(directoryPath))) {
+    public static List<Path> readFilesInRange(Path directoryPath, int startIndex, int endIndex) {
+        try (Stream<Path> pathStream = Files.list(directoryPath)) {
             List<Path> files = pathStream
                     .filter(Files::isRegularFile)
                     .sorted(Comparator.comparingInt(FileUtil::extractNumberFromFileName))
@@ -24,7 +24,7 @@ public class FileUtil {
         }
     }
 
-    public String fileToSting(Path path) {
+    public static String fileToSting(Path path) {
         String text;
 
         try {
