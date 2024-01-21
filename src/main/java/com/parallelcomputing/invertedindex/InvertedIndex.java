@@ -1,7 +1,6 @@
 package com.parallelcomputing.invertedindex;
 
 import java.nio.file.Path;
-import java.sql.SQLOutput;
 import java.util.*;
 
 public class InvertedIndex {
@@ -12,7 +11,7 @@ public class InvertedIndex {
     private InvertedIndex() {
         Path dirPath = Path.of("C:/Users/elpea/OneDrive/Desktop/aclImdb/test/neg");
         int startIndex = 1500;
-        int endIndex = 1750;
+        int endIndex = 1500;
 
         List<Path> pathList = FileUtil.readFilesInRange(dirPath, startIndex, endIndex);
 
@@ -44,10 +43,14 @@ public class InvertedIndex {
     }
 
     private String[] parseTextToWords(String str) {
-        return str
-                .trim()
-                .replaceAll("[^A-Za-z\\s]", "")
-                .toLowerCase(Locale.ROOT)
-                .split("\\s+");
+        String cleanedText = str.replaceAll("<[^>]*>", " ").trim();
+
+        return Arrays.stream(cleanedText
+                        .replaceAll("[^A-Za-z0-9\\s']", " ")
+                        .replaceAll("'[^\\s]*", "")
+                        .toLowerCase(Locale.ROOT)
+                        .split("\\s+"))
+                .distinct()
+                .toArray(String[]::new);
     }
 }
