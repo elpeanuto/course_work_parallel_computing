@@ -10,7 +10,7 @@ public class InvertedIndex {
     private static InvertedIndex instance;
     private final Map<String, Set<String>> index = new ConcurrentHashMap<>();
     private final List<Path> allFiles;
-    ResourceBundle bundle = ResourceBundle.getBundle("config");
+    private final ResourceBundle bundle = ResourceBundle.getBundle("config");
 
     private InvertedIndex() {
         allFiles = getAllPaths();
@@ -18,6 +18,8 @@ public class InvertedIndex {
     }
 
     private void distributeFilesToThreads(int numOfThreads) {
+        long startTime = System.currentTimeMillis();
+
         int batchSize = allFiles.size() / numOfThreads;
         int startIndex = 0;
         List<Thread> threads = new ArrayList<>();
@@ -40,6 +42,12 @@ public class InvertedIndex {
                 e.printStackTrace();
             }
         }
+
+        long endTime = System.currentTimeMillis();
+        long totalTime = endTime - startTime;
+
+        System.out.println("Время выполнения: " + totalTime + " миллисекунд");
+
     }
 
     private void processFiles(List<Path> files) {
@@ -79,8 +87,13 @@ public class InvertedIndex {
         String[] words = parseTextToWords(text);
 
         for (String word : words) {
-            Set<String> val = index.computeIfAbsent(word, k -> new HashSet<>());
-            val.add(fileName);
+            index.compute(word, (key, existingSet) -> {
+                if (existingSet == null) {
+                    existingSet = new HashSet<>();
+                }
+                existingSet.add(fileName);
+                return existingSet;
+            });
         }
     }
 

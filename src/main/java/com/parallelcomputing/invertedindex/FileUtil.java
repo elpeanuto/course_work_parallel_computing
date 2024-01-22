@@ -16,7 +16,7 @@ public class FileUtil {
                     .sorted(Comparator.comparingInt(FileUtil::extractNumberFromFileName))
                     .toList();
 
-            return files.subList(Math.max(0, startIndex), Math.min(endIndex + 1, files.size()));
+            return files.subList(startIndex, endIndex + 1);
 
         } catch (IOException e) {
             e.printStackTrace();
